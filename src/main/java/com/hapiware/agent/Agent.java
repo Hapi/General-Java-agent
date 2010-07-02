@@ -43,7 +43,7 @@ import org.xml.sax.SAXException;
  * The main idea is to have a totally separated environment for running agents. This means that
  * the agent uses its own namespace (i.e. class loader) for its classes. With {@code Agent}
  * a programmer can avoid .jar file version conflicts. That's why the {@code Agent} configuration
- * file has its own {@code classpath} element. Another advantage is that the XML configuration
+ * file has its own {@code classpath} element(s). Another advantage is that the XML configuration
  * file is always similar for different agents. And yet one more advantage is that the programmer
  * does not need to care about the manifest attributes mentioned in {@code java.lang.instrument}
  * package description. They are already handled for the programmer. 
@@ -73,8 +73,12 @@ import org.xml.sax.SAXException;
  * 		<li>{@code <variable>}, this is an <b>optional</b> element for simplifying the configuration</li>
  * 		<li>{@code <delegate>}, this is a <b>mandatory</b> element</li>
  * 		<li>
- * 			{@code <classpath>}, this is a <b>mandatory</b> element and has at minimum of one (1)
+ * 			{@code <classpath-agent>}, this is a <b>mandatory</b> element and has at minimum of one (1)
  * 			{@code <entry>} child element.
+ * 		</li>
+ * 		<li>
+ * 			{@code <classpath-main>}, this is an <b>optional</b> element and can have zero (0)
+ * 			{@code <entry>} child elements.
  * 		</li>
  * 		<li>
  * 			{@code <configuration>}, which is an <b>optional</b> element and can have any kind of
@@ -92,11 +96,16 @@ import org.xml.sax.SAXException;
  *		<variable />
  *		...
  *		<delegate />
- *		<classpath>
+ *		<classpath-agent>
  *			<entry />
  *			<entry />
  *			...
- *		</classpath>
+ *		</classpath-agent>
+ *		<classpath-main>
+ *			<entry />
+ *			<entry />
+ *			...
+ *		</classpath-main>
  *		
  *		<configuration>
  *			<!--
@@ -135,13 +144,13 @@ import org.xml.sax.SAXException;
  *	<agent>
  *		<variable name="repo-path">/users/me/.m2/repository</variable>
  *		<delegate>com.hapiware.test.MyAgentDelegate</delegate>
- *		<classpath>
+ *		<classpath-agent>
  * 			<entry>/users/me/agent/target/my-delegate-1.0.0.jar</entry>
  * 			<entry>${repo-path}/asm/asm/3.1/asm-3.1.jar</entry>
  * 			<entry>${repo-path}/asm/asm-commons/3.1/asm-commons-3.1.jar</entry>
  * 			<entry>${repo-path}/asm/asm-util/3.1/asm-util-3.1.jar</entry>
  * 			<entry>${repo-path}/asm/asm-tree/3.1/asm-tree-3.1.jar</entry>
- *		</classpath>
+ *		</classpath-agent>
  *		<configuration>...</configuration>
  *	</agent>
  * </xmp>
@@ -161,13 +170,13 @@ import org.xml.sax.SAXException;
  *		<variable name="asm-package">asm</variable>
  *		<variable name="${asm-package}-version">3.1</variable>
  *		<delegate>com.hapiware.test.MyAgentDelegate</delegate>
- *		<classpath>
+ *		<classpath-agent>
  * 			<entry>/users/me/agent/target/my-delegate-1.0.0.jar</entry>
  * 			<entry>${repo-path}/${asm-package}/asm/${asm-version}/asm-${asm-version}.jar</entry>
  * 			<entry>${repo-path}/${asm-package}/asm-commons/${asm-version}/asm-commons-${asm-version}.jar</entry>
  * 			<entry>${repo-path}/${asm-package}/asm-util/${asm-version}/asm-util-${asm-version}.jar</entry>
  * 			<entry>${repo-path}/${asm-package}/asm-tree/${asm-version}/asm-tree-${asm-version}.jar</entry>
- *		</classpath>
+ *		</classpath-agent>
  *		<configuration>...</configuration>
  *	</agent>
  * </xmp>
@@ -199,14 +208,14 @@ import org.xml.sax.SAXException;
  * 
  * 
  * 
- * <h4><a name="classpath-element">{@code /agent/classpath} element</h4>
- * The {@code /agent/classpath} element is <b>mandatory</b> and is used to define the classpath
+ * <h4><a name="classpath-agent-element">{@code /agent/classpath-agent} element</h4>
+ * The {@code /agent/classpath-agent} element is <b>mandatory</b> and is used to define the classpath
  * <b>for the agent <u>delegate</u> class</b>. This means that there is no need to put any of
  * the used libraries for the agent delegate class in to the classpath (and actually you shouldn't
- * do that because that's why the whole {@code /agent/classpath} element exist).
+ * do that because that's why the whole {@code /agent/classpath-agent} element exist).
  * <p>
- * The {@code /agent/classpath} element must have at least one {@code <entry>} child element but
- * can have several. The only required classpath entry is the delegate agent (.jar file) itself.
+ * The {@code /agent/classpath-agent} element must have at least one {@code <entry>} child element
+ * but can have several. The only required classpath entry is the delegate agent (.jar file) itself.
  * However, usually there are other classpath entries for the libraries needed by the delegate
  * agent. Here is an example:
  * 
@@ -214,14 +223,42 @@ import org.xml.sax.SAXException;
  * 	<?xml version="1.0" encoding="UTF-8" ?>
  *	<agent>
  *		<delegate>com.hapiware.agent.TimeMachineAgentDelegate</delegate>
- *		<classpath>
+ *		<classpath-agent>
  * 			<entry>/users/me/agent/target/timemachine-delegate-1.0.0.jar</entry>
  * 			<entry>/usr/local/asm-3.1/lib/all/all-asm-3.1.jar</entry>
- *		</classpath>
+ *		</classpath-agent>
  *		<configuration>...</configuration>
  *	</agent>
  * </xmp>
  * 
+ * 
+ * 
+ * <h4><a name="classpath-main-element">{@code /agent/classpath-main} element</h4>
+ * The {@code /agent/classpath-main} element is <b>optional</b> and is used to define the classpath
+ * <b>for the class to be manipulated</b>. A good example of {@code /agent/classpath-main} element
+ * is a case where the byte code of the original class is to be modified so that some additional
+ * libraries are needed. For example, you added an external helper methdo call to the beginning of
+ * a method to print out a stack trace. In this case the modified class needs a way to find the
+ * used external library and {@code /agent/classpath-main} element is exactly for that purpouse.
+ * <p>
+ * The {@code /agent/classpath-main} element does not require any {@code <entry>} child element
+ * and can have several. Here is an example:
+ * 
+ * <xmp>
+ * 	<?xml version="1.0" encoding="UTF-8" ?>
+ *	<agent>
+ *		<delegate>com.hapiware.agent.InfoDelegate</delegate>
+ *		<classpath-agent>
+ * 			<entry>/users/me/agent/target/info-delegate-1.0.0.jar</entry>
+ * 			<entry>/usr/local/asm-3.1/lib/all/all-asm-3.1.jar</entry>
+ *		</classpath-agent>
+ *		<classpath-main>
+ * 			<entry>/users/me/some/other/library.jar</entry>
+ *		</classpath-main>
+ *		<configuration>...</configuration>
+ *	</agent>
+ * </xmp>
+ *  
  * 
  * 
  * <h4><a name="configuration-element">{@code /agent/configuration/} element</a></h4>
@@ -249,9 +286,9 @@ import org.xml.sax.SAXException;
  * 	<?xml version="1.0" encoding="UTF-8" ?>
  *	<agent>
  *		<delegate>com.hapiware.test.MyAgentDelegate</delegate>
- *		<classpath>
+ *		<classpath-agent>
  * 			<entry>/users/me/agent/target/my-delegate-1.0.0.jar</entry>
- *		</classpath>
+ *		</classpath-agent>
  *	</agent>
  * </xmp>
  * which sends {@code null} to the {@code MyAgentDelegate.premain(Object, Instrumentation)} method
@@ -265,9 +302,9 @@ import org.xml.sax.SAXException;
  * 	<?xml version="1.0" encoding="UTF-8" ?>
  *	<agent>
  *		<delegate>com.hapiware.test.MyAgentDelegate</delegate>
- *		<classpath>
+ *		<classpath-agent>
  * 			<entry>/users/me/agent/target/my-delegate-1.0.0.jar</entry>
- *		</classpath>
+ *		</classpath-agent>
  *		<configuration>Show me!</configuration>
  *	</agent>
  * </xmp>
@@ -283,9 +320,9 @@ import org.xml.sax.SAXException;
  * 	<?xml version="1.0" encoding="UTF-8" ?>
  *	<agent>
  *		<delegate>com.hapiware.test.MyAgentDelegate</delegate>
- *		<classpath>
+ *		<classpath-agent>
  * 			<entry>/users/me/agent/target/my-delegate-1.0.0.jar</entry>
- *		</classpath>
+ *		</classpath-agent>
  *		<configuration>
  *			<item>One</item>
  *			<item>Two</item>
@@ -305,9 +342,9 @@ import org.xml.sax.SAXException;
  * 	<?xml version="1.0" encoding="UTF-8" ?>
  *	<agent>
  *		<delegate>com.hapiware.test.MyAgentDelegate</delegate>
- *		<classpath>
+ *		<classpath-agent>
  * 			<entry>/users/me/agent/target/my-delegate-1.0.0.jar</entry>
- *		</classpath>
+ *		</classpath-agent>
  *		<configuration>
  *			<item key="1">One</item>
  *			<item key="2">Two</item>
@@ -335,10 +372,10 @@ import org.xml.sax.SAXException;
  * 	<?xml version="1.0" encoding="UTF-8" ?>
  * 	<agent>
  * 		<delegate>com.hapiware.agent.TimeMachineAgentDelegate</delegate>
- * 		<classpath>
+ * 		<classpath-agent>
  * 			<entry>/users/me/agent/target/timemachine-delegate-1.0.0.jar</entry>
  * 			<entry>/usr/local/asm-3.1/lib/all/all-asm-3.1.jar</entry>
- * 		</classpath>
+ * 		</classpath-agent>
  * 		<configuration unmarshaller="com.hapiware.agent.TimeMachineAgentDelegate">
  * 			<include>^com/hapiware/.*f[oi]x/.+</include>
  * 			<include>^com/mysoft/.+</include>
@@ -388,13 +425,13 @@ public class Agent
 	public static void premain(String agentArgs, Instrumentation instrumentation)
 	{
 		ConfigElements configElements = readConfigurationFile(agentArgs);
-		ClassLoader currentClassLoader = null;
+		ClassLoader originalClassLoader = null;
 		try {
-			currentClassLoader = Thread.currentThread().getContextClassLoader();
+			originalClassLoader = Thread.currentThread().getContextClassLoader();
 			ClassLoader cl =
 				new URLClassLoader(
-					configElements.getClasspaths(),
-					currentClassLoader
+					configElements.getAgentClasspaths(),
+					originalClassLoader
 				);
 			Thread.currentThread().setContextClassLoader(cl);
 			
@@ -445,8 +482,19 @@ public class Agent
 			assert false : e;
 		}
 		finally {
-			if(currentClassLoader != null)
-				Thread.currentThread().setContextClassLoader(currentClassLoader);
+			if(originalClassLoader != null) {
+				URL[] mainClasspaths = configElements.getMainClasspaths();
+				if(mainClasspaths.length > 0) {
+					ClassLoader cl =
+						new URLClassLoader(
+							configElements.getMainClasspaths(),
+							originalClassLoader
+						);
+					Thread.currentThread().setContextClassLoader(cl);
+				}
+				else
+					Thread.currentThread().setContextClassLoader(originalClassLoader);
+			}
 		}
 	}
 
@@ -636,25 +684,38 @@ public class Agent
 					);
 			}
 			
-			// /agent/classpath
-			NodeList classpathEntries =
+			// /agent/classpath-agent
+			NodeList agentClasspathEntries =
 				(NodeList)xpath.evaluate(
-					"/agent/classpath/entry",
+					"/agent/classpath-agent/entry",
 					configDocument,
 					XPathConstants.NODESET
 				);
-			List<String> classpaths = new ArrayList<String>();
-			for(int i = 0; i < classpathEntries.getLength(); i++) {
-				Node classpathEntry = classpathEntries.item(i).getFirstChild();
+			List<String> agentClasspaths = new ArrayList<String>();
+			for(int i = 0; i < agentClasspathEntries.getLength(); i++) {
+				Node classpathEntry = agentClasspathEntries.item(i).getFirstChild();
 				if(classpathEntry != null)
-					classpaths.add(((Text)classpathEntry).getData());
+					agentClasspaths.add(((Text)classpathEntry).getData());
 				else
 					throw
 						new ConfigurationError(
-							"/agent/classpath/entry[" + i + "] does not have a value."
+							"/agent/classpath-agent/entry[" + i + "] does not have a value."
 						);
 			}
 			
+			// /agent/classpath-main
+			NodeList mainClasspathEntries =
+				(NodeList)xpath.evaluate(
+					"/agent/classpath-main/entry",
+					configDocument,
+					XPathConstants.NODESET
+				);
+			List<String> mainClasspaths = new ArrayList<String>();
+			for(int i = 0; i < mainClasspathEntries.getLength(); i++) {
+				Node classpathEntry = mainClasspathEntries.item(i).getFirstChild();
+				if(classpathEntry != null)
+					mainClasspaths.add(((Text)classpathEntry).getData());
+			}
 			
 			// /agent/configuration
 			Node configuration = 
@@ -674,7 +735,8 @@ public class Agent
 			
 			retVal = 
 				new ConfigElements(
-					classpaths,
+					agentClasspaths,
+					mainClasspaths,
 					delegateAgent,
 					unmarshallerName,
 					(Element)configuration
@@ -902,11 +964,13 @@ public class Agent
 	{
 		private final String delegateAgentName;
 		private final String unmarshallerName;
-		private final List<URL> classpaths;
+		private final List<URL> agentClasspaths;
+		private final List<URL> mainClasspaths;
 		private final Element configurationElement;
 		
 		public ConfigElements(
-			List<String> classpaths,
+			List<String> agentClasspaths,
+			List<String> mainClasspaths,
 			String delegateAgentName,
 			String unmarshallerName,
 			Element configElement
@@ -914,18 +978,30 @@ public class Agent
 			throws
 				MalformedURLException
 		{
-			List<URL> classpathsAsURLs = new ArrayList<URL>();
-			for(String classpath : classpaths) {
-				File file = new File(classpath);
+			List<URL> agentClasspathsAsURLs = new ArrayList<URL>();
+			for(String agentClasspath : agentClasspaths) {
+				File file = new File(agentClasspath);
 				if(!file.exists())
 					throw
 						new ConfigurationError(
-							"Class path entry \"" + file + "\" does not exist."
+							"Agent class path entry \"" + file + "\" does not exist."
 						);
-				classpathsAsURLs.add(file.toURI().toURL());
+				agentClasspathsAsURLs.add(file.toURI().toURL());
 			}
+			this.agentClasspaths = Collections.unmodifiableList(agentClasspathsAsURLs);
+			
+			List<URL> mainClasspathsAsURLs = new ArrayList<URL>();
+			for(String mainClasspath : mainClasspaths) {
+				File file = new File(mainClasspath);
+				if(!file.exists())
+					throw
+						new ConfigurationError(
+							"Main class path entry \"" + file + "\" does not exist."
+						);
+				mainClasspathsAsURLs.add(file.toURI().toURL());
+			}
+			this.mainClasspaths = Collections.unmodifiableList(mainClasspathsAsURLs);
 
-			this.classpaths = Collections.unmodifiableList(classpathsAsURLs);
 			this.delegateAgentName = delegateAgentName;
 			this.unmarshallerName = unmarshallerName;
 			this.configurationElement = configElement;
@@ -946,10 +1022,16 @@ public class Agent
 			return delegateAgentName;
 		}
 
-		public URL[] getClasspaths()
+		public URL[] getAgentClasspaths()
 		{
-			URL[] asUrls = new URL[classpaths.size()];
-			return classpaths.toArray(asUrls);
+			URL[] asUrls = new URL[agentClasspaths.size()];
+			return agentClasspaths.toArray(asUrls);
+		}
+
+		public URL[] getMainClasspaths()
+		{
+			URL[] asUrls = new URL[mainClasspaths.size()];
+			return mainClasspaths.toArray(asUrls);
 		}
 	}
 	

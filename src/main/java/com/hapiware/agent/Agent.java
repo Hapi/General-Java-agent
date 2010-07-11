@@ -691,6 +691,11 @@ public class Agent
 					configDocument,
 					XPathConstants.NODESET
 				);
+			if(agentClasspathEntries.getLength() == 0)
+				throw
+					new ConfigurationError(
+						"/agent/classpath-agent/entry is missing."
+					);
 			List<String> agentClasspaths = new ArrayList<String>();
 			for(int i = 0; i < agentClasspathEntries.getLength(); i++) {
 				Node classpathEntry = agentClasspathEntries.item(i).getFirstChild();

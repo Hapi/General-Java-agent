@@ -40,11 +40,11 @@ public abstract class TestBase
 		delegate.appendChild(configDoc.createTextNode("com.hapiware.agent.AgentTest"));
 		agent.appendChild(delegate);
 		
-		// /agent/classpath-agent
-		classpath = configDoc.createElement("classpath-agent");
+		// /agent/classpath
+		classpath = configDoc.createElement("classpath");
 		agent.appendChild(classpath);
 		
-		// /agent/classpath-agent/entry
+		// /agent/classpath/entry
 		Element entry1 = configDoc.createElement("entry");
 		entry1.appendChild(configDoc.createTextNode("."));
 		classpath.appendChild(entry1);

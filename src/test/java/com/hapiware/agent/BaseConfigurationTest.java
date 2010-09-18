@@ -31,11 +31,10 @@ public class BaseConfigurationTest
 		File file = createTemporaryConfigDocumentOnDisc(configDoc);
 		ConfigElements configElements = Agent.readConfigurationFile(file.getCanonicalPath());
 		assertEquals("com.hapiware.agent.AgentTest", configElements.getDelegateAgentName());
-		URL[] agentClasspathUrls = configElements.getAgentClasspaths();
+		URL[] agentClasspathUrls = configElements.getClasspaths();
 		assertEquals(new File(".").toURI().toURL(), agentClasspathUrls[0]);
 		assertEquals(new File(System.getProperty("user.home")).toURI().toURL(), agentClasspathUrls[1]);
 		assertEquals(new File("/").toURI().toURL(), agentClasspathUrls[2]);
-		assertEquals(0, configElements.getMainClasspaths().length);
 		assertEquals(1, configElements.getIncludePatterns().length);
 		assertEquals(".+", configElements.getIncludePatterns()[0].toString());
 		assertEquals(0, configElements.getExcludePatterns().length);

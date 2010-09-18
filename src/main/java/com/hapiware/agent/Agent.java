@@ -73,12 +73,8 @@ import org.xml.sax.SAXException;
  * 		<li>{@code <variable>}, this is an <b>optional</b> element for simplifying the configuration</li>
  * 		<li>{@code <delegate>}, this is a <b>mandatory</b> element</li>
  * 		<li>
- * 			{@code <classpath-agent>}, this is a <b>mandatory</b> element and has at minimum of one (1)
+ * 			{@code <classpath>}, this is a <b>mandatory</b> element and has at minimum of one (1)
  * 			{@code <entry>} child element.
- * 		</li>
- * 		<li>
- * 			{@code <classpath-main>}, this is an <b>optional</b> element and can have zero (0)
- * 			{@code <entry>} child elements.
  * 		</li>
  * 		<li>
  * 			{@code <instrumented-class>}, this is an <b>optional</b> element and can have zero (0)
@@ -100,16 +96,11 @@ import org.xml.sax.SAXException;
  *		<variable />
  *		...
  *		<delegate />
- *		<classpath-agent>
+ *		<classpath>
  *			<entry />
  *			<entry />
  *			...
- *		</classpath-agent>
- *		<classpath-main>
- *			<entry />
- *			<entry />
- *			...
- *		</classpath-main>
+ *		</classpath>
  *		<instrumented-class>
  *			<include />
  *			<include />
@@ -155,13 +146,13 @@ import org.xml.sax.SAXException;
  *	<agent>
  *		<variable name="repo-path">/users/me/.m2/repository</variable>
  *		<delegate>com.hapiware.test.MyAgentDelegate</delegate>
- *		<classpath-agent>
+ *		<classpath>
  * 			<entry>/users/me/agent/target/my-delegate-1.0.0.jar</entry>
  * 			<entry>${repo-path}/asm/asm/3.1/asm-3.1.jar</entry>
  * 			<entry>${repo-path}/asm/asm-commons/3.1/asm-commons-3.1.jar</entry>
  * 			<entry>${repo-path}/asm/asm-util/3.1/asm-util-3.1.jar</entry>
  * 			<entry>${repo-path}/asm/asm-tree/3.1/asm-tree-3.1.jar</entry>
- *		</classpath-agent>
+ *		</classpath>
  *		<configuration>...</configuration>
  *	</agent>
  * </xmp>
@@ -181,13 +172,13 @@ import org.xml.sax.SAXException;
  *		<variable name="asm-package">asm</variable>
  *		<variable name="${asm-package}-version">3.1</variable>
  *		<delegate>com.hapiware.test.MyAgentDelegate</delegate>
- *		<classpath-agent>
+ *		<classpath>
  * 			<entry>/users/me/agent/target/my-delegate-1.0.0.jar</entry>
  * 			<entry>${repo-path}/${asm-package}/asm/${asm-version}/asm-${asm-version}.jar</entry>
  * 			<entry>${repo-path}/${asm-package}/asm-commons/${asm-version}/asm-commons-${asm-version}.jar</entry>
  * 			<entry>${repo-path}/${asm-package}/asm-util/${asm-version}/asm-util-${asm-version}.jar</entry>
  * 			<entry>${repo-path}/${asm-package}/asm-tree/${asm-version}/asm-tree-${asm-version}.jar</entry>
- *		</classpath-agent>
+ *		</classpath>
  *		<configuration>...</configuration>
  *	</agent>
  * </xmp>
@@ -236,13 +227,13 @@ import org.xml.sax.SAXException;
  * 
  * 
  * 
- * <h4><a name="agent-classpath-agent-element">{@code /agent/classpath-agent} element</h4>
- * The {@code /agent/classpath-agent} element is <b>mandatory</b> and is used to define the classpath
+ * <h4><a name="agent-classpath-element">{@code /agent/classpath} element</h4>
+ * The {@code /agent/classpath} element is <b>mandatory</b> and is used to define the classpath
  * <b>for the agent <u>delegate</u> class</b>. This means that there is no need to put any of
  * the used libraries for the agent delegate class in to your environment classpath (and actually
- * you shouldn't do that because that's why the whole {@code /agent/classpath-agent} element exist).
+ * you shouldn't do that because that's why the whole {@code /agent/classpath} element exist).
  * <p>
- * The {@code /agent/classpath-agent} element must have at least one {@code <entry>} child element
+ * The {@code /agent/classpath} element must have at least one {@code <entry>} child element
  * but can have several. The only required classpath entry is the delegate agent (.jar file) itself.
  * However, usually there are other classpath entries for the libraries needed by the delegate
  * agent. Here is an example:
@@ -251,42 +242,15 @@ import org.xml.sax.SAXException;
  * 	<?xml version="1.0" encoding="UTF-8" ?>
  *	<agent>
  *		<delegate>com.hapiware.agent.TimeMachineAgentDelegate</delegate>
- *		<classpath-agent>
+ *		<classpath>
  * 			<entry>/users/me/agent/target/timemachine-delegate-1.0.0.jar</entry>
  * 			<entry>/usr/local/asm-3.1/lib/all/all-asm-3.1.jar</entry>
- *		</classpath-agent>
+ *		</classpath>
  *		<configuration>...</configuration>
  *	</agent>
  * </xmp>
  * 
  * 
- * 
- * <h4><a name="agent-classpath-main-element">{@code /agent/classpath-main} element</h4>
- * The {@code /agent/classpath-main} element is <b>optional</b> and is used to define the classpath
- * <b>for the class to be manipulated</b>. A good example of {@code /agent/classpath-main} element
- * is a case where the byte code of the original class is to be modified so that some additional
- * libraries are needed. For example, you added an external helper method call to the beginning of
- * a method to print out a stack trace. In this case the modified class needs a way to find the
- * used external library and {@code /agent/classpath-main} element is exactly for that purpouse.
- * <p>
- * The {@code /agent/classpath-main} element does not require any {@code <entry>} child element
- * and can have several. Here is an example:
- * 
- * <xmp>
- * 	<?xml version="1.0" encoding="UTF-8" ?>
- *	<agent>
- *		<delegate>com.hapiware.agent.InfoDelegate</delegate>
- *		<classpath-agent>
- * 			<entry>/users/me/agent/target/info-delegate-1.0.0.jar</entry>
- * 			<entry>/usr/local/asm-3.1/lib/all/all-asm-3.1.jar</entry>
- *		</classpath-agent>
- *		<classpath-main>
- * 			<entry>/users/me/some/other/library.jar</entry>
- *		</classpath-main>
- *		<configuration>...</configuration>
- *	</agent>
- * </xmp>
- *
  * 
  * <h4><a name="agent-instrumented-class">{@code /agent/instrumented-class} element</h4>
  * The {@code /agent/instrumented-class} is <b>optional</b> and is used to define classes to be
@@ -298,9 +262,9 @@ import org.xml.sax.SAXException;
  * 	<?xml version="1.0" encoding="UTF-8" ?>
  * 	<agent>
  *		<delegate>com.hapiware.test.MyAgentDelegate</delegate>
- * 		<classpath-agent>
+ * 		<classpath>
  * 			<entry>/users/me/agent/target/my-delegate-1.0.0.jar</entry>
- * 		</classpath-agent>
+ * 		</classpath>
  * 		<instrumented-class>
  * 			<include>^com/hapiware/.*f[oi]x/.+</include>
  * 			<include>^com/mysoft/.+</include>
@@ -359,9 +323,9 @@ import org.xml.sax.SAXException;
  * 	<?xml version="1.0" encoding="UTF-8" ?>
  *	<agent>
  *		<delegate>com.hapiware.test.MyAgentDelegate</delegate>
- *		<classpath-agent>
+ *		<classpath>
  * 			<entry>/users/me/agent/target/my-delegate-1.0.0.jar</entry>
- *		</classpath-agent>
+ *		</classpath>
  *	</agent>
  * </xmp>
  * which sends{@code null} to the
@@ -377,9 +341,9 @@ import org.xml.sax.SAXException;
  * 	<?xml version="1.0" encoding="UTF-8" ?>
  *	<agent>
  *		<delegate>com.hapiware.test.MyAgentDelegate</delegate>
- *		<classpath-agent>
+ *		<classpath>
  * 			<entry>/users/me/agent/target/my-delegate-1.0.0.jar</entry>
- *		</classpath-agent>
+ *		</classpath>
  *		<configuration>Show me!</configuration>
  *	</agent>
  * </xmp>
@@ -397,9 +361,9 @@ import org.xml.sax.SAXException;
  * 	<?xml version="1.0" encoding="UTF-8" ?>
  *	<agent>
  *		<delegate>com.hapiware.test.MyAgentDelegate</delegate>
- *		<classpath-agent>
+ *		<classpath>
  * 			<entry>/users/me/agent/target/my-delegate-1.0.0.jar</entry>
- *		</classpath-agent>
+ *		</classpath>
  *		<configuration>
  *			<item>One</item>
  *			<item>Two</item>
@@ -421,9 +385,9 @@ import org.xml.sax.SAXException;
  * 	<?xml version="1.0" encoding="UTF-8" ?>
  *	<agent>
  *		<delegate>com.hapiware.test.MyAgentDelegate</delegate>
- *		<classpath-agent>
+ *		<classpath>
  * 			<entry>/users/me/agent/target/my-delegate-1.0.0.jar</entry>
- *		</classpath-agent>
+ *		</classpath>
  *		<configuration>
  *			<item key="1">One</item>
  *			<item key="2">Two</item>
@@ -455,10 +419,10 @@ import org.xml.sax.SAXException;
  * 	<?xml version="1.0" encoding="UTF-8" ?>
  * 	<agent>
  * 		<delegate>com.hapiware.agent.FancyAgentDelegate</delegate>
- * 		<classpath-agent>
+ * 		<classpath>
  * 			<entry>/users/me/agent/target/fancy-delegate-1.0.0.jar</entry>
  * 			<entry>/usr/local/asm-3.1/lib/all/all-asm-3.1.jar</entry>
- * 		</classpath-agent>
+ * 		</classpath>
  * 		<instrumented-class>
  * 			<include>^com/hapiware/.*f[oi]x/.+</include>
  * 			<include>^com/mysoft/.+</include>
@@ -521,7 +485,7 @@ public class Agent
 			originalClassLoader = Thread.currentThread().getContextClassLoader();
 			ClassLoader cl =
 				new URLClassLoader(
-					configElements.getAgentClasspaths(),
+					configElements.getClasspaths(),
 					originalClassLoader
 				);
 			Thread.currentThread().setContextClassLoader(cl);
@@ -578,19 +542,8 @@ public class Agent
 			assert false : e;
 		}
 		finally {
-			if(originalClassLoader != null) {
-				URL[] mainClasspaths = configElements.getMainClasspaths();
-				if(mainClasspaths.length > 0) {
-					ClassLoader cl =
-						new URLClassLoader(
-							configElements.getMainClasspaths(),
-							originalClassLoader
-						);
-					Thread.currentThread().setContextClassLoader(cl);
-				}
-				else
-					Thread.currentThread().setContextClassLoader(originalClassLoader);
-			}
+			if(originalClassLoader != null)
+				Thread.currentThread().setContextClassLoader(originalClassLoader);
 		}
 	}
 
@@ -780,42 +733,28 @@ public class Agent
 					);
 			}
 			
-			// /agent/classpath-agent
-			NodeList agentClasspathEntries =
+			// /agent/classpath
+			NodeList classpathEntries =
 				(NodeList)xpath.evaluate(
-					"/agent/classpath-agent/entry",
+					"/agent/classpath/entry",
 					configDocument,
 					XPathConstants.NODESET
 				);
-			if(agentClasspathEntries.getLength() == 0)
+			if(classpathEntries.getLength() == 0)
 				throw
 					new ConfigurationError(
-						"/agent/classpath-agent/entry is missing."
+						"/agent/classpath/entry is missing."
 					);
-			List<String> agentClasspaths = new ArrayList<String>();
-			for(int i = 0; i < agentClasspathEntries.getLength(); i++) {
-				Node classpathEntry = agentClasspathEntries.item(i).getFirstChild();
+			List<String> classpaths = new ArrayList<String>();
+			for(int i = 0; i < classpathEntries.getLength(); i++) {
+				Node classpathEntry = classpathEntries.item(i).getFirstChild();
 				if(classpathEntry != null)
-					agentClasspaths.add(((Text)classpathEntry).getData());
+					classpaths.add(((Text)classpathEntry).getData());
 				else
 					throw
 						new ConfigurationError(
-							"/agent/classpath-agent/entry[" + i + "] does not have a value."
+							"/agent/classpath/entry[" + i + "] does not have a value."
 						);
-			}
-			
-			// /agent/classpath-main
-			NodeList mainClasspathEntries =
-				(NodeList)xpath.evaluate(
-					"/agent/classpath-main/entry",
-					configDocument,
-					XPathConstants.NODESET
-				);
-			List<String> mainClasspaths = new ArrayList<String>();
-			for(int i = 0; i < mainClasspathEntries.getLength(); i++) {
-				Node classpathEntry = mainClasspathEntries.item(i).getFirstChild();
-				if(classpathEntry != null)
-					mainClasspaths.add(((Text)classpathEntry).getData());
 			}
 			
 			// /agent/instrumented-class/include
@@ -866,8 +805,7 @@ public class Agent
 			
 			retVal = 
 				new ConfigElements(
-					agentClasspaths,
-					mainClasspaths,
+					classpaths,
 					includePatterns,
 					excludePatterns,
 					delegateAgent,
@@ -1099,13 +1037,11 @@ public class Agent
 		private final String unmarshallerName;
 		private final List<Pattern> includePatterns;
 		private final List<Pattern> excludePatterns;
-		private final List<URL> agentClasspaths;
-		private final List<URL> mainClasspaths;
+		private final List<URL> classpaths;
 		private final Element configurationElement;
 		
 		public ConfigElements(
-			List<String> agentClasspaths,
-			List<String> mainClasspaths,
+			List<String> classpaths,
 			List<Pattern> includePatterns,
 			List<Pattern> excludePatterns,
 			String delegateAgentName,
@@ -1115,30 +1051,18 @@ public class Agent
 			throws
 				MalformedURLException
 		{
-			List<URL> agentClasspathsAsURLs = new ArrayList<URL>();
-			for(String agentClasspath : agentClasspaths) {
+			List<URL> classpathsAsURLs = new ArrayList<URL>();
+			for(String agentClasspath : classpaths) {
 				File file = new File(agentClasspath);
 				if(!file.exists())
 					throw
 						new ConfigurationError(
 							"Agent class path entry \"" + file + "\" does not exist."
 						);
-				agentClasspathsAsURLs.add(file.toURI().toURL());
+				classpathsAsURLs.add(file.toURI().toURL());
 			}
-			this.agentClasspaths = Collections.unmodifiableList(agentClasspathsAsURLs);
+			this.classpaths = Collections.unmodifiableList(classpathsAsURLs);
 			
-			List<URL> mainClasspathsAsURLs = new ArrayList<URL>();
-			for(String mainClasspath : mainClasspaths) {
-				File file = new File(mainClasspath);
-				if(!file.exists())
-					throw
-						new ConfigurationError(
-							"Main class path entry \"" + file + "\" does not exist."
-						);
-				mainClasspathsAsURLs.add(file.toURI().toURL());
-			}
-			this.mainClasspaths = Collections.unmodifiableList(mainClasspathsAsURLs);
-
 			this.includePatterns = Collections.unmodifiableList(includePatterns);
 			this.excludePatterns = Collections.unmodifiableList(excludePatterns);
 
@@ -1162,16 +1086,11 @@ public class Agent
 			return delegateAgentName;
 		}
 
-		public URL[] getAgentClasspaths()
+		public URL[] getClasspaths()
 		{
-			return agentClasspaths.toArray(new URL[0]);
+			return classpaths.toArray(new URL[0]);
 		}
 
-		public URL[] getMainClasspaths()
-		{
-			return mainClasspaths.toArray(new URL[0]);
-		}
-		
 		public Pattern[] getIncludePatterns()
 		{
 			return includePatterns.toArray(new Pattern[0]);

@@ -20,6 +20,7 @@ public abstract class TestBase
 	protected Document configDoc;
 	protected Element agent;
 	protected Element classpath;
+	protected Element instrumentedClass; 
 	protected Element configuration;
 	
 	
@@ -53,7 +54,11 @@ public abstract class TestBase
 		Element entry3 = configDoc.createElement("entry");
 		entry3.appendChild(configDoc.createTextNode("/"));
 		classpath.appendChild(entry3);
- 	}
+		
+		// /agent/instrumented-class
+		instrumentedClass = configDoc.createElement("instrumented-class");
+		agent.appendChild(instrumentedClass);
+	}
 	
 	protected File createTemporaryConfigDocumentOnDisc(Document configurationDocument)
 	{

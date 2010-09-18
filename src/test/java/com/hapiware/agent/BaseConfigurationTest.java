@@ -12,7 +12,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.w3c.dom.Element;
 
-import com.hapiware.agent.Agent;
 import com.hapiware.agent.Agent.ConfigElements;
 
 
@@ -37,6 +36,9 @@ public class BaseConfigurationTest
 		assertEquals(new File(System.getProperty("user.home")).toURI().toURL(), agentClasspathUrls[1]);
 		assertEquals(new File("/").toURI().toURL(), agentClasspathUrls[2]);
 		assertEquals(0, configElements.getMainClasspaths().length);
+		assertEquals(1, configElements.getIncludePatterns().length);
+		assertEquals(".+", configElements.getIncludePatterns()[0].toString());
+		assertEquals(0, configElements.getExcludePatterns().length);
 		file.delete();
 	}
 	

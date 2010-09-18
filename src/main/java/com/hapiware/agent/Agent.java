@@ -81,6 +81,10 @@ import org.xml.sax.SAXException;
  * 			{@code <entry>} child elements.
  * 		</li>
  * 		<li>
+ * 			{@code <instrumented-class>}, this is an <b>optional</b> element and can have zero (0)
+ * 			{@code <include>} and/or {@code <exclude>} child elements.
+ * 		</li>
+ * 		<li>
  * 			{@code <configuration>}, which is an <b>optional</b> element and can have any kind of
  * 			child elements. {@code <configuration>} element can also have an optional
  * 			{@code unmarshaller} attribute to handle programmer's own configuration structures.
@@ -106,7 +110,14 @@ import org.xml.sax.SAXException;
  *			<entry />
  *			...
  *		</classpath-main>
- *		
+ *		<instrumented-class>
+ *			<include />
+ *			<include />
+ *			<exclude />
+ *			<exclude />
+ *			...	
+ *		</instrumented-class>	
+ *
  *		<configuration>
  *			<!--
  *				This can be text, a predefined structure or
@@ -118,7 +129,7 @@ import org.xml.sax.SAXException;
  * 
  * 
  * 
- * <h4><a name="variable-element">{@code /agent/variable} element</h4>
+ * <h4><a name="agent-variable-element">{@code /agent/variable} element</h4>
  * The {@code /agent/variable} element is <b>optional</b> and it is supposed to be used to simplify
  * the configuration file. Variables can be anywhere under {@code agent} element (i.e. they
  * need not to be in the beginning of the configuration file).
@@ -183,36 +194,53 @@ import org.xml.sax.SAXException;
  * 
  * 
  * 
- * <h4><a name="delegate-element">{@code /agent/delegate} element</h4>
+ * <h4><a name="agent-delegate-element">{@code /agent/delegate} element</h4>
  * The {@code /agent/delegate} element is <b>mandatory</b> and its value is the name of the delegate class
  * as a fully qualified name (e.g. {@code com.hapiware.asm.TimeMachineAgentDelegate}).
  * <p>
  * 
  * The agent delegate class must have the following method (with the exact signature):
  * <blockquote>
- * 		{@code public static void premain(Object config, Instrumentation instrumentation)}
+ * 	<pre>
+ * 		public static void premain(
+ * 			java.util.regex.Pattern[] includePatterns,
+ * 			java.util.regex.Pattern[] excludePatterns,
+ * 			Object config,
+ * 			Instrumentation instrumentation
+ * 		)
+ * 	</pre>
  * </blockquote>
  * 
  * where:
  * <ul>
  * 		<li>
+ * 			{@code java.util.regex.Pattern[] includePatterns} has a list of regular expression
+ * 			patterns to be used	to include classes for instrumentation.
+ * 			See <a href="#agent-instrumented-class">{@code /agent/instrumented-class}</a>
+ * 		</li>
+ * 		<li>
+ * 			{@code java.util.regex.Pattern[] excludePatterns} has a list of regular expression
+ * 			patterns to be used	to set classes not to be instrumented.
+ * 			See <a href="#agent-instrumented-class">{@code /agent/instrumented-class}</a>
+ * 		</li>
+ * 		<li>
  * 			{@code Object config} is the configuration object based on the
- * 			<a href="#configuration-element">{@code /agent/configuration} element</a>.
+ * 			<a href="#agent-configuration-element">{@code /agent/configuration} element</a>.
  * 		</li>
  * 		<li>{@code Instrumentation instrumentation} has services to provide the instrumentation.</li>
  * </ul>
  * 
- * This {@code static void premain(Object, Instrumentation)} method <b>can do all the same
- * things</b> as defined for {@code static void premain(String, Instrumentation)} method in
- * the {@code java.lang.instrument} package description.  
+ * This {@code static void premain(java.util.regex.Pattern[], java.util.regex.Pattern[], Object, Instrumentation)}
+ * method <b>can do all the same things</b> as defined for {@code static void premain(String, Instrumentation)}
+ * method in the {@code java.lang.instrument} package description.  
  * 
  * 
  * 
- * <h4><a name="classpath-agent-element">{@code /agent/classpath-agent} element</h4>
+ * <h4><a name="agent-classpath-agent-element">{@code /agent/classpath-agent} element</h4>
  * The {@code /agent/classpath-agent} element is <b>mandatory</b> and is used to define the classpath
  * <b>for the agent <u>delegate</u> class</b>. This means that there is no need to put any of
- * the used libraries for the agent delegate class in to the classpath (and actually you shouldn't
- * do that because that's why the whole {@code /agent/classpath-agent} element exist).
+ * the used libraries for the agent delegate class in to your environment classpath (and actually
+ * you shouldn't do that because that's why the whole {@code /agent/classpath-agent} element exist).
  * <p>
  * The {@code /agent/classpath-agent} element must have at least one {@code <entry>} child element
  * but can have several. The only required classpath entry is the delegate agent (.jar file) itself.
@@ -233,11 +261,11 @@ import org.xml.sax.SAXException;
  * 
  * 
  * 
- * <h4><a name="classpath-main-element">{@code /agent/classpath-main} element</h4>
+ * <h4><a name="agent-classpath-main-element">{@code /agent/classpath-main} element</h4>
  * The {@code /agent/classpath-main} element is <b>optional</b> and is used to define the classpath
  * <b>for the class to be manipulated</b>. A good example of {@code /agent/classpath-main} element
  * is a case where the byte code of the original class is to be modified so that some additional
- * libraries are needed. For example, you added an external helper methdo call to the beginning of
+ * libraries are needed. For example, you added an external helper method call to the beginning of
  * a method to print out a stack trace. In this case the modified class needs a way to find the
  * used external library and {@code /agent/classpath-main} element is exactly for that purpouse.
  * <p>
@@ -258,14 +286,58 @@ import org.xml.sax.SAXException;
  *		<configuration>...</configuration>
  *	</agent>
  * </xmp>
- *  
+ *
+ * 
+ * <h4><a name="agent-instrumented-class">{@code /agent/instrumented-class} element</h4>
+ * The {@code /agent/instrumented-class} is <b>optional</b> and is used to define classes to be
+ * instrumented.
+ * <p>
+ * The {@code /agent/instrumented-class} element can have several {@code include} and/or
+ * {@code exclude} elements but can have also none of them. Here is an example:
+ * <xmp>
+ * 	<?xml version="1.0" encoding="UTF-8" ?>
+ * 	<agent>
+ *		<delegate>com.hapiware.test.MyAgentDelegate</delegate>
+ * 		<classpath-agent>
+ * 			<entry>/users/me/agent/target/my-delegate-1.0.0.jar</entry>
+ * 		</classpath-agent>
+ * 		<instrumented-class>
+ * 			<include>^com/hapiware/.*f[oi]x/.+</include>
+ * 			<include>^com/mysoft/.+</include>
+ * 			<exclude>^com/hapiware/.+/CreateCalculationForm</exclude>
+ * 		</instrumented-class>
+ * 		<configuration>...</configuration>
+ * 	</agent>
+ * </xmp>
+ * 
+ * <h5>{@code <include>} element</h5>
+ * If there are more than one they are all used (i.e. ORed) for matching the possible candidates
+ * for instrumentation. If none is defined then one pattern containing <b>{@code ".+"}</b> is
+ * assumed as a default value. {@code <include>} element is a regular expression which can be used
+ * to match all the classes to be instrumented.
+ * <p>
+ * <b>Notice</b> that the class names are presented in the internal form of fully qualified class
+ * names as defined in The Java Virtual Machine Specification (e.g. "java/util/List"). So, when
+ * you create {@code <include>} and {@code <exclude>} elements, remember that package names are
+ * separated with slash (/) instead of period (.).
+ *
+ * <h5>{@code <exclude>} element</h5>
+ * {@code <exclude>} can be used to ensure that the instrumentation is not done for some classes.
+ * {@code <exclude>} element is a regular expression which can be used to match all the classes
+ * <b>not to be</b> instrumented.
+ * <p>
+ * <b>Notice</b> that the class names are presented in the internal form of fully qualified class
+ * names as defined in The Java Virtual Machine Specification (e.g. "java/util/List"). So, when
+ * you create {@code <include>} and {@code <exclude>} elements, remember that package names are
+ * separated with slash (/) instead of period (.).
  * 
  * 
- * <h4><a name="configuration-element">{@code /agent/configuration/} element</a></h4>
+ * <h4><a name="agent-configuration-element">{@code /agent/configuration/} element</a></h4>
  * The {@code /agent/configuration/} element is <b>optional</b> and has all the necessary
  * configuration information for the agent delegate class. The exact structure can depend on
  * the programmer but there are some predefined structures as well. The configuration object
- * is delivered to the agent delegate's {@code static void premain(Object, Instrumentation)}
+ * is delivered to the agent delegate's
+ * {@code static void premain(java.util.regex.Pattern[], java.util.regex.Pattern[], Object, Instrumentation)}
  * method as the first (i.e. {@code Object}) argument.
  * <p>
  * 
@@ -280,8 +352,9 @@ import org.xml.sax.SAXException;
  * 
  * <h5>{@code null}</h5>
  * If the {@code /agent/configuration/} element is not defined at all then {@code null} is
- * delivered to the agent delegate's {@code static void premain(Object, Instrumentation)} method
- * as a first argument. For example:
+ * delivered to the agent delegate's
+ * {@code static void premain(java.util.regex.Pattern[], java.util.regex.Pattern[], Object, Instrumentation)}
+ * method as a first argument. For example:
  * <xmp>
  * 	<?xml version="1.0" encoding="UTF-8" ?>
  *	<agent>
@@ -291,12 +364,14 @@ import org.xml.sax.SAXException;
  *		</classpath-agent>
  *	</agent>
  * </xmp>
- * which sends {@code null} to the {@code MyAgentDelegate.premain(Object, Instrumentation)} method
- * as a first argument.
+ * which sends{@code null} to the
+ * {@code MyAgentDelegate.premain(java.util.regex.Pattern[], java.util.regex.Pattern[], Object, Instrumentation)}
+ * method as a first argument.
  * 
  * <h5>{@code String}</h5>
  * If the {@code /agent/configuration/} element has only pure text (i.e. {@code String}), the
- * text string is delivered to the delegate's {@code static void premain(Object, Instrumentation)}
+ * text string is delivered to the delegate's
+ * {@code static void premain(java.util.regex.Pattern[], java.util.regex.Pattern[], Object, Instrumentation)}
  * method as a first argument. For example:
  * <xmp>
  * 	<?xml version="1.0" encoding="UTF-8" ?>
@@ -308,14 +383,16 @@ import org.xml.sax.SAXException;
  *		<configuration>Show me!</configuration>
  *	</agent>
  * </xmp>
- * which sends "Show me!" to the {@code MyAgentDelegate.premain(Object, Instrumentation)} method
- * as a first argument.
+ * which sends "Show me!" to the
+ * {@code MyAgentDelegate.premain(java.util.regex.Pattern[], java.util.regex.Pattern[], Object, Instrumentation)}
+ * method as a first argument.
  * 
  * <h5>{@code List<String>}</h5>
  * If the {@code /agent/configuration/} element has {@code <item>} child elements <u>without an 
  * attribute</u> then the {@code List<String>} is created which is in turn delivered to the agent
- * delegate's {@code static void premain(Object, Instrumentation)} method as a first argument. For
- * example:
+ * delegate's
+ * {@code static void premain(java.util.regex.Pattern[], java.util.regex.Pattern[], Object, Instrumentation)}
+ * method as a first argument. For example:
  * <xmp>
  * 	<?xml version="1.0" encoding="UTF-8" ?>
  *	<agent>
@@ -331,13 +408,15 @@ import org.xml.sax.SAXException;
  *	</agent>
  * </xmp>
  * which sends {@code List<String>} {"One", "Two", "Three"} to the
- * {@code MyAgentDelegate.premain(Object, Instrumentation)} method as a first argument.
+ * {@code MyAgentDelegate.premain(java.util.regex.Pattern[], java.util.regex.Pattern[], Object, Instrumentation)}
+ * method as a first argument.
  * 
  * <h5>{@code Map<String, String>}</h5>
  * If the {@code /agent/configuration/} element has {@code <item>} child elements <u>with a
  * {@code key} attribute</u> then the {@code Map<String, String>} is created which is in turn
- * delivered to the agent delegate's {@code static void premain(Object, Instrumentation)} method
- * as a first argument. For example:
+ * delivered to the agent delegate's
+ * {@code static void premain(java.util.regex.Pattern[], java.util.regex.Pattern[], Object, Instrumentation)}
+ * method as a first argument. For example:
  * <xmp>
  * 	<?xml version="1.0" encoding="UTF-8" ?>
  *	<agent>
@@ -353,16 +432,20 @@ import org.xml.sax.SAXException;
  *	</agent>
  * </xmp>
  * which sends {@code Map<String, String>} {{"1", "One"}, {"2", "Two"}, {"3", "Three"}} to the
- * {@code MyAgentDelegate.premain(Object, Instrumentation)} method as a first argument.
+ * {@code MyAgentDelegate.premain(java.util.regex.Pattern[], java.util.regex.Pattern[], Object, Instrumentation)}
+ * method as a first argument.
  * 
  * <h5>User defined configuration object</h5>
  * If the {@code /agent/configuration/} element has the {@code unmarshaller} attribute defined,
  * then {@code public static Object unmarshall(org.w3c.dom.Element configElement)} method of
  * the defined unmarshaller class is called with the {@code /agent/configuration} element as
  * an argument. The system then delivers the returned {@code Object} directly to the agent
- * delegate's {@code static void premain(Object, Instrumentation)} method as the first argument.
- * This approach makes it possible to create different configuration structures for the agent
- * delegate's {@code static void premain(Object, Instrumentation)} method very flexibly.
+ * delegate's
+ * {@code static void premain(java.util.regex.Pattern[], java.util.regex.Pattern[], Object, Instrumentation)}
+ * method as the first argument. This approach makes it possible to create different configuration
+ * structures for the agent delegate's
+ * {@code static void premain(java.util.regex.Pattern[], java.util.regex.Pattern[], Object, Instrumentation)}
+ * method very flexibly.
  * <p>
  * The {@code unmarshaller} attribute must be a fully qualified class name
  * (e.g. {@code com.hapiware.asm.TimeMachineAgentDelegate}) and assumes that the defined
@@ -371,39 +454,47 @@ import org.xml.sax.SAXException;
  * <xmp>
  * 	<?xml version="1.0" encoding="UTF-8" ?>
  * 	<agent>
- * 		<delegate>com.hapiware.agent.TimeMachineAgentDelegate</delegate>
+ * 		<delegate>com.hapiware.agent.FancyAgentDelegate</delegate>
  * 		<classpath-agent>
- * 			<entry>/users/me/agent/target/timemachine-delegate-1.0.0.jar</entry>
+ * 			<entry>/users/me/agent/target/fancy-delegate-1.0.0.jar</entry>
  * 			<entry>/usr/local/asm-3.1/lib/all/all-asm-3.1.jar</entry>
  * 		</classpath-agent>
- * 		<configuration unmarshaller="com.hapiware.agent.TimeMachineAgentDelegate">
+ * 		<instrumented-class>
  * 			<include>^com/hapiware/.*f[oi]x/.+</include>
  * 			<include>^com/mysoft/.+</include>
  * 			<exclude>^com/hapiware/.+/CreateCalculationForm</exclude>
- * 			<time>2010-3-13@7:15:0</time>
+ * 		</instrumented-class>
+ * 		<configuration unmarshaller="com.hapiware.agent.FancyAgentDelegate">
+ * 			<message>Hello World!</message>
+ * 			<date>2010-3-13</date>
  * 		</configuration>
  * 	</agent>
  * </xmp>
  * 
- * This assumes that {@code com.hapiware.asm.TimeMachineAgentDelegate} class has
+ * This assumes that {@code com.hapiware.asm.FancyAgentDelegate} class has
  * {@code public static Object unmarshall(org.w3c.dom.Element configElement)} method defined
- * to handle {@code <include>}, {@code <exclude>} and {@code <time>} elements from the
- * {@code <configuration>} element. It is also assumed that the {@code Object} the
- * {@code unmarshall()} method returns can be properly handled (and type casted) in the
- * {@code static void premain(Object, Instrumentation)} method.
+ * to handle {@code <message>} and {@code <date>} elements from the {@code <configuration>}
+ * element. It is also assumed that the {@code Object} the {@code unmarshall()} method returns
+ * can be properly handled (and type casted) in the
+ * {@code static void premain(java.util.regex.Pattern[], java.util.regex.Pattern[], Object, Instrumentation)}
+ * method.
  * <p>
  * Notice that in this example the {@code unmarshall()} method was defined to be in the
- * {@code com.hapiware.asm.TimeMachineAgentDelegate} class but is not a requirement,
- * although it can make programmer's life a bit easier. 
+ * {@code com.hapiware.asm.FancyAgentDelegate} class but is not a requirement, although it can
+ * make programmer's life a bit easier. 
  * 
  * 
  * @see java.lang.instrument
  * 
- * @author hapi
+ * @author <a href="http://www.hapiware.com" target="_blank">hapi</a>
  *
  */
 public class Agent
 {
+	private final static String PREMAIN_SIGNATURE =
+		"static void premain(java.util.regex.Pattern[], java.util.regex.Pattern[], Object, Instrumentation)";
+	
+	
 	/**
 	 * This method is called before the main method call right after the JVM initialisation. 
 	 * <p>
@@ -412,7 +503,7 @@ public class Agent
 	 * 
 	 * @param agentArgs
 	 * 		Same string which was given to {@code -javaagent} as <i>options</i> (see the class
-	 * 		description). Notice that <i>options</i> must be parsed by the agent itself.
+	 * 		description).
 	 * 
 	 * @param instrumentation
 	 * 		See {@code java.lang.instrument.Instrumentation}
@@ -442,8 +533,14 @@ public class Agent
 				(Class<?>)cl.loadClass(configElements.getDelegateAgentName());
 			delegateAgentClass.getMethod(
 				"premain",
-				new Class[] {Object.class, Instrumentation.class}
-			).invoke(null, delegateConfiguration, instrumentation);
+				new Class[] {Pattern[].class, Pattern[].class, Object.class, Instrumentation.class}
+			).invoke(
+				null,
+				configElements.getIncludePatterns(),
+				configElements.getExcludePatterns(),
+				delegateConfiguration,
+				instrumentation
+			);
 		}
 		catch(ClassNotFoundException e) {
 			throw
@@ -456,7 +553,7 @@ public class Agent
 		catch(NoSuchMethodException e) {
 			throw
 				new ConfigurationError(
-					"static void premain(Object, Instrumentation) method was not defined in \""
+					PREMAIN_SIGNATURE + " method was not defined in \""
 						+ configElements.getDelegateAgentName() + "\".",
 					e
 				);
@@ -464,7 +561,7 @@ public class Agent
 		catch(IllegalArgumentException e) {
 			throw
 				new ConfigurationError(
-					"Argument mismatch with static void premain(Object, Instrumentation) method "
+					"Argument mismatch with " + PREMAIN_SIGNATURE + " "
 						+ "in \"" + configElements.getDelegateAgentName() + "\".",
 					e
 				);
@@ -472,8 +569,7 @@ public class Agent
 		catch(InvocationTargetException e) {
 			throw
 				new ConfigurationError(
-					"static void premain(Object, Instrumentation) method "
-						+ "in \"" + configElements.getDelegateAgentName()
+					PREMAIN_SIGNATURE + " in \"" + configElements.getDelegateAgentName()
 						+ "\" threw an exception.",
 					e
 				);
@@ -722,6 +818,36 @@ public class Agent
 					mainClasspaths.add(((Text)classpathEntry).getData());
 			}
 			
+			// /agent/instrumented-class/include
+			NodeList includeEntries = 
+				(NodeList)xpath.evaluate(
+					"/agent/instrumented-class/include",
+					configDocument,
+					XPathConstants.NODESET
+				);
+			List<Pattern> includePatterns = new ArrayList<Pattern>();
+			for(int i = 0; i < includeEntries.getLength(); i++) {
+				Node includeEntry = includeEntries.item(i).getFirstChild();
+				if(includeEntry != null)
+					includePatterns.add(Pattern.compile(((Text)includeEntry).getData()));
+			}
+			if(includePatterns.size() == 0)
+				includePatterns.add(Pattern.compile(".+"));
+			
+			// /agent/instrumented-class/exclude
+			NodeList excludeEntries = 
+				(NodeList)xpath.evaluate(
+					"/agent/instrumented-class/exclude",
+					configDocument,
+					XPathConstants.NODESET
+				);
+			List<Pattern> excludePatterns = new ArrayList<Pattern>();
+			for(int i = 0; i < excludeEntries.getLength(); i++) {
+				Node excludeEntry = excludeEntries.item(i).getFirstChild();
+				if(excludeEntry != null)
+					excludePatterns.add(Pattern.compile(((Text)excludeEntry).getData()));
+			}
+			
 			// /agent/configuration
 			Node configuration = 
 				(Node)xpath.evaluate(
@@ -742,6 +868,8 @@ public class Agent
 				new ConfigElements(
 					agentClasspaths,
 					mainClasspaths,
+					includePatterns,
+					excludePatterns,
 					delegateAgent,
 					unmarshallerName,
 					(Element)configuration
@@ -969,6 +1097,8 @@ public class Agent
 	{
 		private final String delegateAgentName;
 		private final String unmarshallerName;
+		private final List<Pattern> includePatterns;
+		private final List<Pattern> excludePatterns;
 		private final List<URL> agentClasspaths;
 		private final List<URL> mainClasspaths;
 		private final Element configurationElement;
@@ -976,6 +1106,8 @@ public class Agent
 		public ConfigElements(
 			List<String> agentClasspaths,
 			List<String> mainClasspaths,
+			List<Pattern> includePatterns,
+			List<Pattern> excludePatterns,
 			String delegateAgentName,
 			String unmarshallerName,
 			Element configElement
@@ -1007,6 +1139,9 @@ public class Agent
 			}
 			this.mainClasspaths = Collections.unmodifiableList(mainClasspathsAsURLs);
 
+			this.includePatterns = Collections.unmodifiableList(includePatterns);
+			this.excludePatterns = Collections.unmodifiableList(excludePatterns);
+
 			this.delegateAgentName = delegateAgentName;
 			this.unmarshallerName = unmarshallerName;
 			this.configurationElement = configElement;
@@ -1029,14 +1164,22 @@ public class Agent
 
 		public URL[] getAgentClasspaths()
 		{
-			URL[] asUrls = new URL[agentClasspaths.size()];
-			return agentClasspaths.toArray(asUrls);
+			return agentClasspaths.toArray(new URL[0]);
 		}
 
 		public URL[] getMainClasspaths()
 		{
-			URL[] asUrls = new URL[mainClasspaths.size()];
-			return mainClasspaths.toArray(asUrls);
+			return mainClasspaths.toArray(new URL[0]);
+		}
+		
+		public Pattern[] getIncludePatterns()
+		{
+			return includePatterns.toArray(new Pattern[0]);
+		}
+		
+		public Pattern[] getExcludePatterns()
+		{
+			return excludePatterns.toArray(new Pattern[0]);
 		}
 	}
 	

@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema
+	xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+>
+	<xsd:element name="agent">
+		<xsd:complexType>
+			<xsd:sequence>
+				<xsd:element name="variable" minOccurs="0" maxOccurs="unbounded">
+					<xsd:complexType>
+						<xsd:simpleContent>
+							<xsd:extension base="xsd:string">
+								<xsd:attribute name="name" type="text" use="required"/>
+							</xsd:extension>
+						</xsd:simpleContent>
+					</xsd:complexType>
+				</xsd:element>
+				<xsd:element name="delegate" type="className" minOccurs="1" maxOccurs="1"/>
+				<xsd:element name="classpath" minOccurs="1" maxOccurs="1">
+					<xsd:complexType>
+						<xsd:sequence>
+							<xsd:element
+								name="entry"
+								type="filepath"
+								minOccurs="1"
+								maxOccurs="unbounded"
+							/>
+						</xsd:sequence>
+					</xsd:complexType>
+				</xsd:element>
+				<xsd:element name="filter" minOccurs="0" maxOccurs="1">
+					<xsd:complexType>
+						<xsd:sequence>
+							<xsd:element
+								name="include"
+								type="text"
+								minOccurs="0"
+								maxOccurs="unbounded"
+							/>
+							<xsd:element
+								name="exclude"
+								type="text"
+								minOccurs="0"
+								maxOccurs="unbounded"
+							/>
+						</xsd:sequence>
+					</xsd:complexType>
+				</xsd:element>
+				<xsd:element name="configuration" minOccurs="0" maxOccurs="1">
+					<xsd:complexType mixed="true">
+						<xsd:sequence>
+							<xsd:choice>
+								<xsd:element name="item" minOccurs="0" maxOccurs="unbounded">
+									<xsd:complexType>
+										<xsd:simpleContent>
+											<xsd:extension base="xsd:string">
+												<xsd:attribute
+													name="key"
+													type="text"
+													use="optional"
+												/>
+											</xsd:extension>
+										</xsd:simpleContent>
+									</xsd:complexType>
+								</xsd:element>
+								<xsd:element name="custom" minOccurs="1" maxOccurs="1">
+									<xsd:complexType mixed="true">
+										<xsd:sequence>
+											<xsd:any
+												namespace="##any"
+												processContents="skip"
+												minOccurs="0"
+												maxOccurs="unbounded"
+											/>
+										</xsd:sequence>
+									<xsd:attribute
+										name="unmarshaller"
+										type="className"
+										use="required"
+									/>
+									</xsd:complexType>
+								</xsd:element>
+							</xsd:choice>
+						</xsd:sequence>
+					</xsd:complexType>
+				</xsd:element>
+			</xsd:sequence>
+		</xsd:complexType>
+	</xsd:element>
+	
+	<xsd:simpleType name="className">
+		<xsd:restriction base="xsd:string">
+			<xsd:minLength value="1" />
+		</xsd:restriction>
+	</xsd:simpleType>
+
+	<xsd:simpleType name="filepath">
+		<xsd:restriction base="xsd:string">
+			<xsd:minLength value="1" />
+		</xsd:restriction>
+	</xsd:simpleType>
+
+	<xsd:simpleType name="text">
+		<xsd:restriction base="xsd:string">
+			<xsd:minLength value="1" />
+		</xsd:restriction>
+	</xsd:simpleType>
+</xsd:schema>

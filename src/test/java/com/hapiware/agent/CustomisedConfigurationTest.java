@@ -39,25 +39,24 @@ public class CustomisedConfigurationTest
 		
 		// /agent/configuration
 		configuration = configDoc.createElement("configuration");
-		configuration.setAttribute("unmarshaller", this.getClass().getName());
 		agent.appendChild(configuration);
 		
-		// /agent/configuration/item
-		Element item = configDoc.createElement("include");
-		item.appendChild(configDoc.createTextNode("^com/hapiware/.+"));
-		configuration.appendChild(item);
+		// /agent/configuration/custom
+		Element custom = configDoc.createElement("custom");
+		custom.setAttribute("unmarshaller", this.getClass().getName());
+		configuration.appendChild(custom);
+		
+		Element item = configDoc.createElement("message");
+		item.appendChild(configDoc.createTextNode("Hello Agent!"));
+		custom.appendChild(item);
 
-		item = configDoc.createElement("include");
-		item.appendChild(configDoc.createTextNode("^com/mysoft/.+"));
-		configuration.appendChild(item);
-
-		item = configDoc.createElement("exclude");
-		item.appendChild(configDoc.createTextNode("^com/bea/.+"));
-		configuration.appendChild(item);
-
-		item = configDoc.createElement("time");
-		item.appendChild(configDoc.createTextNode("+30-20-10@1:2:3"));
-		configuration.appendChild(item);
+		item = configDoc.createElement("message");
+		item.appendChild(configDoc.createTextNode("Same to you, too!"));
+		custom.appendChild(item);
+		
+		item = configDoc.createElement("date");
+		item.appendChild(configDoc.createTextNode("2010-09-19"));
+		custom.appendChild(item);
  	}
 	
 	@Test
@@ -68,10 +67,9 @@ public class CustomisedConfigurationTest
 
 		TestConfiguration configuration =
 			(TestConfiguration)Agent.unmarshall(this.getClass().getClassLoader(), configElements);
-		assertEquals("+30-20-10@1:2:3", configuration.getTime());
-		assertEquals("^com/hapiware/.+", configuration.getIncludes().get(0));
-		assertEquals("^com/mysoft/.+", configuration.getIncludes().get(1));
-		assertEquals("^com/bea/.+", configuration.getExcludes().get(0));
+		assertEquals("2010-09-19", configuration.getDate());
+		assertEquals("Hello Agent!", configuration.getMessages().get(0));
+		assertEquals("Same to you, too!", configuration.getMessages().get(1));
 	}
 	
 	
@@ -79,68 +77,47 @@ public class CustomisedConfigurationTest
 	{
 		XPath xpath = XPathFactory.newInstance().newXPath();
 		
-		NodeList includeEntries =
+		NodeList messageEntries =
 			(NodeList)xpath.evaluate(
-				"./include",
+				"./message",
 				configElement,
 				XPathConstants.NODESET
 			);
-		List<String> includes = new ArrayList<String>();
-		for(int i = 0; i < includeEntries.getLength(); i++) {
-			Node includeEntry = includeEntries.item(i).getFirstChild();
+		List<String> messages = new ArrayList<String>();
+		for(int i = 0; i < messageEntries.getLength(); i++) {
+			Node includeEntry = messageEntries.item(i).getFirstChild();
 			if(includeEntry != null)
-				includes.add(((Text)includeEntry).getData());
+				messages.add(((Text)includeEntry).getData());
 		}
 		
-		NodeList excludeEntries =
-			(NodeList)xpath.evaluate(
-				"./exclude",
-				configElement,
-				XPathConstants.NODESET
-			);
-		List<String> excludes = new ArrayList<String>();
-		for(int i = 0; i < excludeEntries.getLength(); i++) {
-			Node excludeEntry = excludeEntries.item(i).getFirstChild();
-			if(excludeEntry != null)
-				excludes.add(((Text)excludeEntry).getData());
-		}
+		String date = (String)xpath.evaluate("./date", configElement, XPathConstants.STRING);
 		
-		String time = (String)xpath.evaluate("./time", configElement, XPathConstants.STRING);
-		
-		return new TestConfiguration(excludes, includes, time);
+		return new TestConfiguration(messages, date);
 	}
 	
 	
 	public static class TestConfiguration
 	{
-		private final List<String> excludes;
-		private final List<String> includes;
-		private final String time;
+		private final List<String> messages;
+		private final String date;
 		
 		
-		public TestConfiguration(List<String> excludes, List<String> includes, String time)
+		public TestConfiguration(List<String> messages, String date)
 		{
-			this.excludes = Collections.unmodifiableList(excludes);
-			this.includes = Collections.unmodifiableList(includes);
-			this.time = time;
+			this.messages = Collections.unmodifiableList(messages);
+			this.date = date;
 		}
 
 
-		public List<String> getIncludes()
+		public List<String> getMessages()
 		{
-			return includes;
+			return messages;
 		}
 
 
-		public List<String> getExcludes()
+		public String getDate()
 		{
-			return excludes;
-		}
-
-
-		public String getTime()
-		{
-			return time;
+			return date;
 		}
 	}
 }

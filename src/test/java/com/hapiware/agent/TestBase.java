@@ -55,8 +55,8 @@ public abstract class TestBase
 		entry3.appendChild(configDoc.createTextNode("/"));
 		classpath.appendChild(entry3);
 		
-		// /agent/instrumented-class
-		instrumentedClass = configDoc.createElement("instrumented-class");
+		// /agent/filter
+		instrumentedClass = configDoc.createElement("filter");
 		agent.appendChild(instrumentedClass);
 	}
 	

@@ -14,6 +14,7 @@ import javax.xml.xpath.XPathFactory;
 import org.junit.Before;
 import org.junit.Test;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import com.hapiware.agent.Agent.ConfigElements;
@@ -169,6 +170,7 @@ public class VariableConfigurationTest
 	
 	private void setUpVariables(String[][] variableTable)
 	{
+		Node delegate = null;
 		try {
 			XPath xpath = XPathFactory.newInstance().newXPath();
 			
@@ -181,6 +183,14 @@ public class VariableConfigurationTest
 				);
 			for(int i = 0; i < allVariableEntries.getLength(); i++)
 				configDoc.removeChild(allVariableEntries.item(i));
+			
+			// Finds delegate element
+			delegate =
+				(Node)xpath.evaluate(
+					"/agent/delegate",
+					configDoc,
+					XPathConstants.NODE
+				);
 		}
 		catch(XPathExpressionException e) {
 			System.err.print("This should never happen, but here we are... Exception was: ");
@@ -195,7 +205,7 @@ public class VariableConfigurationTest
 			variables[i] = configDoc.createElement("variable");
 			variables[i].setAttribute("name", variable[0]);
 			variables[i].appendChild(configDoc.createTextNode(variable[1]));
-			agent.appendChild(variables[i]);
+			agent.insertBefore(variables[i], delegate);
 			i++;
 		}
 	}

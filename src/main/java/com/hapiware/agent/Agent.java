@@ -127,7 +127,7 @@ import org.xml.sax.SAXException;
  * 
  * 
  * 
- * <h4><a name="agent-variable-element">{@code /agent/variable} element</h4>
+ * <h4><a name="agent-variable-element">{@code /agent/variable} element</a></h4>
  * The {@code /agent/variable} element is <b>optional</b> and it is supposed to be used to simplify
  * the configuration file. Variables can be anywhere under {@code agent} element (i.e. they
  * need not to be in the beginning of the configuration file).
@@ -192,7 +192,7 @@ import org.xml.sax.SAXException;
  * 
  * 
  * 
- * <h4><a name="agent-delegate-element">{@code /agent/delegate} element</h4>
+ * <h4><a name="agent-delegate-element">{@code /agent/delegate} element</a></h4>
  * The {@code /agent/delegate} element is <b>mandatory</b> and its value is the name of the delegate class
  * as a fully qualified name (e.g. {@code com.hapiware.asm.TimeMachineAgentDelegate}).
  * <p>
@@ -234,7 +234,7 @@ import org.xml.sax.SAXException;
  * 
  * 
  * 
- * <h4><a name="agent-classpath-element">{@code /agent/classpath} element</h4>
+ * <h4><a name="agent-classpath-element">{@code /agent/classpath} element</a></h4>
  * The {@code /agent/classpath} element is <b>mandatory</b> and is used to define the classpath
  * <b>for the agent <u>delegate</u> class</b>. This means that there is no need to put any of
  * the used libraries for the agent delegate class in to your environment classpath.
@@ -258,7 +258,7 @@ import org.xml.sax.SAXException;
  * 
  * 
  * 
- * <h4><a name="agent-filter-element">{@code /agent/filter} element</h4>
+ * <h4><a name="agent-filter-element">{@code /agent/filter} element</a></h4>
  * The {@code /agent/filter} is <b>optional</b> and is used to filter classes to be
  * instrumented.
  * <p>

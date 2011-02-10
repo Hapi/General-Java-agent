@@ -71,6 +71,7 @@
 				<artifactId>maven-jar-plugin</artifactId>
 				<configuration>
 					<archive>
+						<manifestFile>src/main/resources/META-INF/MANIFEST.MF</manifestFile>
 						<manifestEntries>
 							<Implementation-Title>${project.build.finalName}</Implementation-Title> 
 							<Implementation-Version>${project.version}</Implementation-Version>

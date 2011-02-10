@@ -8,6 +8,28 @@
 	<groupId>com.hapiware.agent</groupId>
 	<artifactId>agent</artifactId>
 	<version>2.0.0</version>
+	<description>
+		Agent is a generic solution to greatly simplify the agent programming
+		(see java.lang.instrument package description for more information about agents in general).
+	</description>
+	<licenses>
+		<license>
+			<name>MIT License</name>
+			<url>http://github.com/Hapi/General-Java-agent/raw/master/src/main/resources/LICENSE</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+	<scm>
+		<url>http://github.com/Hapi/General-Java-agent</url>
+		<connection>scm:git:http://github.com/Hapi/General-Java-agent</connection>
+	</scm>
+	<developers>
+		<developer>
+			<id>hapi</id>
+			<name>Hapi</name>
+			<email>hapi@hapiware.com</email>
+		</developer>
+	</developers>
 	
 	<build>
 		<plugins>
@@ -17,15 +39,6 @@
 				<configuration>
 					<source>1.5</source>
 					<target>1.5</target>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-jar-plugin</artifactId>
-				<configuration>
-					<archive>
-						<manifestFile>src/main/resources/META-INF/MANIFEST.MF</manifestFile>
-					</archive>
 				</configuration>
 			</plugin>
 			<plugin>
@@ -40,6 +53,31 @@
 						</goals>
 					</execution>
 				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>attach</id>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<configuration>
+					<archive>
+						<manifestEntries>
+							<Implementation-Title>${project.build.finalName}</Implementation-Title> 
+							<Implementation-Version>${project.version}</Implementation-Version>
+							<Implementation-Vendor>http://www.hapiware.com</Implementation-Vendor>
+						</manifestEntries>
+					</archive>
+				</configuration>
 			</plugin>
 		</plugins>
 	</build>
@@ -95,4 +133,40 @@
 			</plugin>
 		</plugins>
 	</reporting>
+	
+	<distributionManagement>
+		<repository>
+			<id>hapiware-repo</id>
+			<url>scp://hapi.github.com/maven2</url>
+		</repository>
+	</distributionManagement>
+	
+	<profiles>
+		<profile>
+			<id>sign-artifacts</id>
+			<activation>
+				<property>
+					<name>performRelease</name>
+					<value>true</value>
+				</property>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-gpg-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>sign-artifacts</id>
+								<phase>verify</phase>
+								<goals>
+									<goal>sign</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
 </project>

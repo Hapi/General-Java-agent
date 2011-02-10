@@ -50,7 +50,7 @@ public class ListConfigurationTest
 
 		@SuppressWarnings("unchecked")
 		List<String> list =
-			(List<String>)Agent.unmarshall(this.getClass().getClassLoader(), configElements);
+			(List<String>)Agent.unmarshall(this.getClass(), configElements);
 		assertEquals(NUMBER_OF_ITEMS, list.size());
 		int i = 0;
 		for(String value : list)
@@ -67,6 +67,6 @@ public class ListConfigurationTest
 
 		ConfigElements configElements =
 			Agent.readDOMDocument(configDoc, this.getClass().toString());
-		Agent.unmarshall(this.getClass().getClassLoader(), configElements);
+		Agent.unmarshall(this.getClass(), configElements);
 	}
 }

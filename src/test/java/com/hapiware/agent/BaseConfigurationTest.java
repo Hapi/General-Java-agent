@@ -58,7 +58,7 @@ public class BaseConfigurationTest
 	{
 		ConfigElements configElements =
 			Agent.readDOMDocument(configDoc, this.getClass().toString());
-		Object obj = Agent.unmarshall(this.getClass().getClassLoader(), configElements);
+		Object obj = Agent.unmarshall(this.getClass(), configElements);
 		assertEquals(null, obj);
 	}
 

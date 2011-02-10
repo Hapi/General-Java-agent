@@ -52,7 +52,7 @@ public class MapConfigurationTest
 
 		@SuppressWarnings("unchecked")
 		Map<String, String> map =
-			(Map<String, String>)Agent.unmarshall(this.getClass().getClassLoader(), configElements);
+			(Map<String, String>)Agent.unmarshall(this.getClass(), configElements);
 		assertEquals(NUMBER_OF_ITEMS, map.size());
 		for(int i = 0; i < map.size(); i++) {
 			assertTrue(map.containsKey("key-" + i));
@@ -69,6 +69,6 @@ public class MapConfigurationTest
 
 		ConfigElements configElements =
 			Agent.readDOMDocument(configDoc, this.getClass().toString());
-		Agent.unmarshall(this.getClass().getClassLoader(), configElements);
+		Agent.unmarshall(this.getClass(), configElements);
 	}
 }

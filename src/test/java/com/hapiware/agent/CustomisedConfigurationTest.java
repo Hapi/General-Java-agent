@@ -43,7 +43,6 @@ public class CustomisedConfigurationTest
 		
 		// /agent/configuration/custom
 		Element custom = configDoc.createElement("custom");
-		custom.setAttribute("unmarshaller", this.getClass().getName());
 		configuration.appendChild(custom);
 		
 		Element item = configDoc.createElement("message");
@@ -66,7 +65,7 @@ public class CustomisedConfigurationTest
 			Agent.readDOMDocument(configDoc, this.getClass().toString());
 
 		TestConfiguration configuration =
-			(TestConfiguration)Agent.unmarshall(this.getClass().getClassLoader(), configElements);
+			(TestConfiguration)Agent.unmarshall(this.getClass(), configElements);
 		assertEquals("2010-09-19", configuration.getDate());
 		assertEquals("Hello Agent!", configuration.getMessages().get(0));
 		assertEquals("Same to you, too!", configuration.getMessages().get(1));

@@ -90,7 +90,7 @@ import org.xml.sax.SAXException;
  * 		</li>
  * 		<li>
  * 			{@code <configuration>}, which is an <b>optional</b> element is used to configure
- * 			agent delagate.
+ * 			agent delegate.
  * 			See <a href="#agent-configuration-element">{@code /agent/configuration} element</a>
  * 		</li>
  * </ul>
@@ -405,8 +405,9 @@ import org.xml.sax.SAXException;
  * 
  * <h5>User defined configuration object</h5>
  * If the {@code /agent/configuration/} element has the {@code custom} child element defined,
- * then {@code public static Object unmarshall(org.w3c.dom.Element configElement)} method of
- * the defined unmarshaller class is called with the {@code /agent/configuration/custom} element
+ * then {@code public static Object unmarshall(org.w3c.dom.Element configElement)} method must
+ * be defined to the agent delegate class in addition to {@code premain()} method. The
+ * {@code unmarshall()} method is called with the {@code /agent/configuration/custom} element
  * as an argument. The system then delivers the returned {@code Object} directly to the agent
  * delegate's
  * {@code static void premain(java.util.regex.Pattern[], java.util.regex.Pattern[], Object, Instrumentation)}
@@ -417,8 +418,9 @@ import org.xml.sax.SAXException;
  * <p>
  * The {@code custom} element has a mandatory {@code unmarshaller} attribute which must be a fully
  * qualified class name (e.g. {@code com.hapiware.agent.FancyAgentDelegate}) and assumes that
- * the defined class has {@code public static Object unmarshall(org.w3c.dom.Element configElement)}
- * method defined which returns the programmer's own configuration object. Here is an example:
+ * 
+ * {@code public static Object unmarshall(org.w3c.dom.Element configElement)} is assumed to return
+ * a programmer's own configuration object. Here is an example:
  * <xmp>
  * 	<?xml version="1.0" encoding="UTF-8" ?>
  * 	<agent>
@@ -433,7 +435,7 @@ import org.xml.sax.SAXException;
  * 			<exclude>^com/hapiware/.+/CreateCalculationForm</exclude>
  * 		</filter>
  * 		<configuration>
- * 			<custom unmarshaller="com.hapiware.agent.FancyAgentDelegate">
+ * 			<custom>
  * 				<message>Hello World!</message>
  * 				<date>2010-3-13</date>
  * 			</custom>
@@ -448,10 +450,6 @@ import org.xml.sax.SAXException;
  * can be properly handled (and type casted) in the
  * {@code static void premain(java.util.regex.Pattern[], java.util.regex.Pattern[], Object, Instrumentation)}
  * method.
- * <p>
- * Notice that in this example the {@code unmarshall()} method was defined to be in the
- * {@code com.hapiware.asm.FancyAgentDelegate} class but is not a requirement, although it can
- * make programmer's life a bit easier. 
  * 
  * 
  * @see java.lang.instrument
@@ -496,11 +494,12 @@ public class Agent
 				);
 			Thread.currentThread().setContextClassLoader(cl);
 			
-			Object delegateConfiguration = unmarshall(cl, configElements);
 			
-			// Invokes the premain method of the delegate agent.
 			Class<?> delegateAgentClass =
 				(Class<?>)cl.loadClass(configElements.getDelegateAgentName());
+			Object delegateConfiguration = unmarshall(delegateAgentClass, configElements);
+			
+			// Invokes the premain method of the delegate agent.
 			delegateAgentClass.getMethod(
 				"premain",
 				new Class[] {Pattern[].class, Pattern[].class, Object.class, Instrumentation.class}
@@ -866,7 +865,7 @@ public class Agent
 	 * 
 	 *		For more information, see the class description.
 	 */
-	static Object unmarshall(ClassLoader classLoader, ConfigElements configElements)
+	static Object unmarshall(Class<?> delegateAgentClass, ConfigElements configElements)
 	{
 		Element configElement = configElements.getConfigurationElement();
 		if(configElement != null) {
@@ -875,33 +874,19 @@ public class Agent
 			else {
 				Node firstNode = configElement.getFirstChild();
 				if(firstNode != null && firstNode.getNodeName().equals("custom")) {
-					String unmarshallerName;
-					NamedNodeMap configurationAttributes = firstNode.getAttributes();
-					Node unmarshaller = configurationAttributes.getNamedItem("unmarshaller");
-					unmarshallerName = unmarshaller.getNodeValue();
 					try {
 						// Invokes the unmarshaller.
-						Class<?> unmarshallerClass =
-							(Class<?>)classLoader.loadClass(unmarshallerName);
 						return
-							unmarshallerClass.getMethod(
+							delegateAgentClass.getMethod(
 								"unmarshall",
 								new Class[] {Element.class}
 							).invoke(null, configElements.getConfigurationElement().getFirstChild());
-					}
-					catch(ClassNotFoundException e) {
-						throw
-							new ConfigurationError(
-								"An unmarhaller class  \""
-									+ unmarshallerName + "\" was not found.",
-								e
-							);
 					}
 					catch(NoSuchMethodException e) {
 						throw
 							new ConfigurationError(
 								"static Object unmarshall(Element) method was not defined in \""
-									+ unmarshallerName + "\".",
+									+ delegateAgentClass.getName() + "\".",
 								e
 							);
 					}
@@ -909,7 +894,7 @@ public class Agent
 						throw
 							new ConfigurationError(
 								"Argument mismatch with static Object unmarshall(Element) method "
-									+ "in \"" + unmarshallerName + "\".",
+									+ "in \"" + delegateAgentClass.getName() + "\".",
 								e
 							);
 					}
@@ -917,7 +902,7 @@ public class Agent
 						throw
 							new ConfigurationError(
 								"static Object unmarshall(Element) method "
-									+ "in \"" + unmarshallerName
+									+ "in \"" + delegateAgentClass.getName()
 									+ "\" threw an exception.",
 								e
 							);

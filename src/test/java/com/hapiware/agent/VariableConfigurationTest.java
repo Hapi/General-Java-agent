@@ -59,7 +59,7 @@ public class VariableConfigurationTest
 
 		@SuppressWarnings("unchecked")
 		List<String> list =
-			(List<String>)Agent.unmarshall(this.getClass().getClassLoader(), configElements);
+			(List<String>)Agent.unmarshall(this.getClass(), configElements);
 		assertEquals("^com/hapiware/.+", list.get(0));
 		assertEquals("test-hapiware-One: hapiware says miu-mau.", list.get(1));
 	}
@@ -90,7 +90,7 @@ public class VariableConfigurationTest
 
 		@SuppressWarnings("unchecked")
 		List<String> list =
-			(List<String>)Agent.unmarshall(this.getClass().getClassLoader(), configElements);
+			(List<String>)Agent.unmarshall(this.getClass(), configElements);
 		assertEquals("test-hapiware: says miu-mau.", list.get(0));
 	}
 	
@@ -121,7 +121,7 @@ public class VariableConfigurationTest
 
 		@SuppressWarnings("unchecked")
 		List<String> list =
-			(List<String>)Agent.unmarshall(this.getClass().getClassLoader(), configElements);
+			(List<String>)Agent.unmarshall(this.getClass(), configElements);
 		assertEquals("test-hapiware: [/users/me]", list.get(0));
 	}
 	

@@ -39,7 +39,7 @@ public class StringConfigurationTest
 		
 		ConfigElements configElements =
 			Agent.readDOMDocument(configDoc, this.getClass().toString());
-		String value = (String)Agent.unmarshall(this.getClass().getClassLoader(), configElements);
+		String value = (String)Agent.unmarshall(this.getClass(), configElements);
 		assertEquals("This is text.", value);
 	}
 	
@@ -48,7 +48,7 @@ public class StringConfigurationTest
 	{
 		ConfigElements configElements =
 			Agent.readDOMDocument(configDoc, this.getClass().toString());
-		Agent.unmarshall(this.getClass().getClassLoader(), configElements);
+		Agent.unmarshall(this.getClass(), configElements);
 	}
 	
 	@Test(expected=Agent.ConfigurationError.class)
@@ -58,6 +58,6 @@ public class StringConfigurationTest
 
 		ConfigElements configElements =
 			Agent.readDOMDocument(configDoc, this.getClass().toString());
-		Agent.unmarshall(this.getClass().getClassLoader(), configElements);
+		Agent.unmarshall(this.getClass(), configElements);
 	}
 }

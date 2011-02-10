@@ -72,11 +72,6 @@
 												maxOccurs="unbounded"
 											/>
 										</xsd:sequence>
-									<xsd:attribute
-										name="unmarshaller"
-										type="className"
-										use="required"
-									/>
 									</xsd:complexType>
 								</xsd:element>
 							</xsd:choice>

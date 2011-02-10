@@ -416,9 +416,6 @@ import org.xml.sax.SAXException;
  * {@code static void premain(java.util.regex.Pattern[], java.util.regex.Pattern[], Object, Instrumentation)}
  * method very flexibly.
  * <p>
- * The {@code custom} element has a mandatory {@code unmarshaller} attribute which must be a fully
- * qualified class name (e.g. {@code com.hapiware.agent.FancyAgentDelegate}) and assumes that
- * 
  * {@code public static Object unmarshall(org.w3c.dom.Element configElement)} is assumed to return
  * a programmer's own configuration object. Here is an example:
  * <xmp>

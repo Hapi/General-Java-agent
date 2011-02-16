@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<agent>
+    <delegate>com.hapiware.asm.AgentDelegate</delegate>
+    <classpath>
+        <entry>.</entry>
+    </classpath>
+	<filter>
+		<include>^com/hapiware/.*f[oi]x/.+</include>
+		<include>^com/mysoft/.+</include>
+		<exclude>^com/hapiware/.+/CreateCalculationForm</exclude>
+	</filter>
+	<configuration>
+		<item>One</item>
+		<item>Two</item>
+		<item>Three</item>
+	</configuration>
+</agent>

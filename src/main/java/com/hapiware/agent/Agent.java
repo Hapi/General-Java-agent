@@ -870,14 +870,34 @@ public class Agent
 				return createCollectionConfiguration(configElements);
 			else {
 				Node firstNode = configElement.getFirstChild();
-				if(firstNode != null && firstNode.getNodeName().equals("custom")) {
+				Node targetNode = firstNode;
+				boolean customElementFound = false;
+				boolean textNodeFound = false;
+				while(targetNode != null) {
+					if(targetNode.getNodeName().equals("#text") && targetNode.getNodeValue().trim().length() > 0)
+						textNodeFound = true;
+					if(targetNode.getNodeName().equals("custom")) {
+						customElementFound = true;
+						break;
+					}
+					targetNode = targetNode.getNextSibling();
+				}
+				if(textNodeFound && customElementFound)
+					throw
+						new ConfigurationError(
+							"/agent/configuration/custom element cannot co-exist with a text element "
+							+ "(i.e. a pure string under /agent/configuration)."
+						);
+				if(!customElementFound)
+					targetNode = firstNode;
+				if(customElementFound) {
 					try {
 						// Invokes the unmarshaller.
 						return
 							delegateAgentClass.getMethod(
 								"unmarshall",
 								new Class[] {Element.class}
-							).invoke(null, configElements.getConfigurationElement().getFirstChild());
+							).invoke(null, targetNode);
 					}
 					catch(NoSuchMethodException e) {
 						throw
@@ -910,14 +930,14 @@ public class Agent
 					}
 				}
 				else {
-					if(firstNode == null || firstNode.getNodeValue().trim().length() == 0)
+					if(targetNode == null || targetNode.getNodeValue().trim().length() == 0)
 						throw
 							new ConfigurationError(
-								"/agent/configuration does not have a proper string "
+								"/agent/configuration does not have a proper string (i.e. text element) "
 									+ "(or any other elements)"
 							);
 					
-					return firstNode.getNodeValue().trim();
+					return targetNode.getNodeValue().trim();
 				}
 			}
 		}

@@ -20,8 +20,8 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.Text;
 
-import com.hapiware.agent.Agent;
 import com.hapiware.agent.Agent.ConfigElements;
+import com.hapiware.agent.Agent.ConfigurationError;
 
 
 
@@ -29,6 +29,11 @@ public class CustomisedConfigurationTest
 	extends
 		TestBase
 {
+	private static final String FILENAME = BASEDIR + "agent-config-custom.xml";
+	private static final String FILENAME_COMMENTED = BASEDIR + "agent-config-custom-with-comments.xml";
+	private static final String FILENAME_ERRORS = BASEDIR + "agent-config-custom-error.xml";
+	
+	
 	private Element configuration;
 	
 	
@@ -71,6 +76,35 @@ public class CustomisedConfigurationTest
 		assertEquals("Same to you, too!", configuration.getMessages().get(1));
 	}
 	
+	@Test
+	public void readFromFile()
+	{
+		ConfigElements configElements = Agent.readConfigurationFile(FILENAME);
+		TestConfiguration configuration =
+			(TestConfiguration)Agent.unmarshall(this.getClass(), configElements);
+		assertEquals("2010-03-13", configuration.getDate());
+		assertEquals("Hello World!", configuration.getMessages().get(0));
+		assertEquals("Hello Moon!", configuration.getMessages().get(1));
+	}
+
+	@Test
+	public void readFromFileHasComments()
+	{
+		ConfigElements configElements = Agent.readConfigurationFile(FILENAME_COMMENTED);
+		TestConfiguration configuration =
+			(TestConfiguration)Agent.unmarshall(this.getClass(), configElements);
+		assertEquals("2010-03-13", configuration.getDate());
+		assertEquals("Hello World!", configuration.getMessages().get(0));
+		assertEquals("Hello Moon!", configuration.getMessages().get(1));
+	}
+
+	@Test(expected = ConfigurationError.class)
+	public void readFromFileHasError()
+	{
+		ConfigElements configElements = Agent.readConfigurationFile(FILENAME_ERRORS);
+		Agent.unmarshall(this.getClass(), configElements);
+	}
+
 	
 	public static Object unmarshall(Element configElement) throws XPathExpressionException
 	{

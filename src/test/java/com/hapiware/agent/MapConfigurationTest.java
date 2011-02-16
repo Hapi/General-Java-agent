@@ -1,6 +1,7 @@
 package com.hapiware.agent;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
@@ -12,7 +13,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.w3c.dom.Element;
 
-import com.hapiware.agent.Agent;
 import com.hapiware.agent.Agent.ConfigElements;
 
 
@@ -21,6 +21,9 @@ public class MapConfigurationTest
 	extends
 		TestBase
 {
+	private static final String FILENAME = BASEDIR + "agent-config-map.xml";
+	
+	
 	private static final int NUMBER_OF_ITEMS = 5;
 	
 	private Element configuration;
@@ -70,5 +73,21 @@ public class MapConfigurationTest
 		ConfigElements configElements =
 			Agent.readDOMDocument(configDoc, this.getClass().toString());
 		Agent.unmarshall(this.getClass(), configElements);
+	}
+	
+	@Test
+	public void readFromFile()
+	{
+		ConfigElements configElements = Agent.readConfigurationFile(FILENAME);
+		assertBasicConfiguration(configElements);
+		@SuppressWarnings("unchecked")
+		Map<String, String> map = (Map<String, String>)Agent.unmarshall(null, configElements);
+		assertEquals("One", map.get("1"));
+		assertEquals("Two", map.get("2"));
+		assertEquals("Three", map.get("3"));
+		assertNull(map.get("0"));
+		assertNull(map.get("4"));
+		assertNull(map.get("5"));
+		assertNull(map.get("test"));
 	}
 }

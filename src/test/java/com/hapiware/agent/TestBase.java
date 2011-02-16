@@ -1,5 +1,7 @@
 package com.hapiware.agent;
 
+import static org.junit.Assert.assertEquals;
+
 import java.io.File;
 import java.io.IOException;
 
@@ -15,8 +17,13 @@ import javax.xml.transform.stream.StreamResult;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
+import com.hapiware.agent.Agent.ConfigElements;
+
 public abstract class TestBase
 {
+	protected static final String BASEDIR = "src/test/resources/";
+	
+	
 	protected Document configDoc;
 	protected Element agent;
 	protected Element classpath;
@@ -81,5 +88,16 @@ public abstract class TestBase
 			e.printStackTrace();
 		}
 		return file;
+	}
+	
+	protected static void assertBasicConfiguration(ConfigElements configElements)
+	{
+		assertEquals("com.hapiware.asm.AgentDelegate", configElements.getDelegateAgentName());
+		assertEquals("^com/hapiware/.*f[oi]x/.+", configElements.getIncludePatterns()[0].toString());
+		assertEquals("^com/mysoft/.+", configElements.getIncludePatterns()[1].toString());
+		assertEquals(
+			"^com/hapiware/.+/CreateCalculationForm",
+			configElements.getExcludePatterns()[0].toString()
+		);
 	}
 }

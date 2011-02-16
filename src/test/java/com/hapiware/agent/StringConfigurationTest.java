@@ -10,7 +10,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.w3c.dom.Element;
 
-import com.hapiware.agent.Agent;
 import com.hapiware.agent.Agent.ConfigElements;
 
 
@@ -19,6 +18,9 @@ public class StringConfigurationTest
 	extends
 		TestBase
 {
+	private static final String FILENAME = BASEDIR + "agent-config-string.xml";
+	
+	
 	private Element configuration;
 	
 	
@@ -59,5 +61,14 @@ public class StringConfigurationTest
 		ConfigElements configElements =
 			Agent.readDOMDocument(configDoc, this.getClass().toString());
 		Agent.unmarshall(this.getClass(), configElements);
+	}
+	
+	@Test
+	public void readFromFile()
+	{
+		ConfigElements configElements = Agent.readConfigurationFile(FILENAME);
+		assertBasicConfiguration(configElements);
+		String str = (String)Agent.unmarshall(null, configElements);
+		assertEquals("Hello World!", str);
 	}
 }

@@ -1,6 +1,6 @@
 package com.hapiware.agent;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import java.io.IOException;
 import java.util.List;
@@ -20,6 +20,9 @@ public class ListConfigurationTest
 	extends
 		TestBase
 {
+	private static final String FILENAME = BASEDIR + "agent-config-list.xml";
+	
+	
 	private static final int NUMBER_OF_ITEMS = 5;
 	
 	private Element configuration;
@@ -68,5 +71,24 @@ public class ListConfigurationTest
 		ConfigElements configElements =
 			Agent.readDOMDocument(configDoc, this.getClass().toString());
 		Agent.unmarshall(this.getClass(), configElements);
+	}
+	
+	@Test
+	public void readFromFile()
+	{
+		ConfigElements configElements = Agent.readConfigurationFile(FILENAME);
+		assertBasicConfiguration(configElements);
+		@SuppressWarnings("unchecked")
+		List<String> list = (List<String>)Agent.unmarshall(null, configElements);
+		assertEquals("One", list.get(0));
+		assertEquals("Two", list.get(1));
+		assertEquals("Three", list.get(2));
+		try {
+			list.get(3);
+			fail("Should have raised IndexOutOfBoundsException.");
+		}
+		catch(IndexOutOfBoundsException e) {
+			// Does nothing;
+		}
 	}
 }

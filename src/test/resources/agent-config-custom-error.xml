@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<agent>
+    <delegate>com.hapiware.asm.AgentDelegate</delegate>
+    <classpath>
+        <entry>.</entry>
+    </classpath>
+	<filter>
+		<include>^com/hapiware/.*f[oi]x/.+</include>
+		<include>^com/mysoft/.+</include>
+		<exclude>^com/hapiware/.+/CreateCalculationForm</exclude>
+	</filter>
+    <configuration>
+    	<!-- The custom element. -->
+    	Error is here!!!
+    	<!-- And another comment. -->
+		<custom>
+			<message>Hello World!</message>
+			<date>2010-03-13</date>
+			<message>Hello Moon!</message>
+		</custom>
+	</configuration>
+</agent>

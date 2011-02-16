@@ -19,6 +19,9 @@ public class BaseConfigurationTest
 	extends
 		TestBase
 {
+	private static final String FILENAME = BASEDIR + "agent-config-none.xml";
+	
+	
 	@Before
 	public void setup() throws ParserConfigurationException
 	{
@@ -93,5 +96,12 @@ public class BaseConfigurationTest
 		classpath.appendChild(nonExistJar);
 
 		Agent.readDOMDocument(configDoc, this.getClass().toString());
+	}
+	
+	@Test
+	public void readFromFile()
+	{
+		ConfigElements configElements = Agent.readConfigurationFile(FILENAME);
+		assertBasicConfiguration(configElements);
 	}
 }
